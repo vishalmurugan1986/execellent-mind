@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Excellent Mind · School dashboard</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="login" class="login" hidden>
+      <form class="card login-card" id="login-form">
+        <img src="logo.svg" alt="" width="56" height="56" />
+        <p class="kicker">School dashboard</p>
+        <h1>Excellent Mind</h1>
+        <p class="muted">Each student's brainwave progress, synced from the lab tablets.</p>
+        <label>Admin password <input type="password" id="password" autocomplete="current-password" required /></label>
+        <p class="error" id="login-error" hidden></p>
+        <button class="btn primary" type="submit">Sign in</button>
+        <p class="hint">The password is shown in the console window when the dashboard server starts.</p>
+      </form>
+    </main>
+
+    <div id="app" hidden>
+      <header class="topbar">
+        <div class="brand"><img src="logo.svg" alt="" width="34" height="34" /><span>Excellent Mind</span><span class="pill" id="school-name"></span></div>
+        <div class="top-actions">
+          <span class="muted small" id="last-sync"></span>
+          <button class="btn ghost" id="refresh">Refresh</button>
+          <a class="btn ghost" href="/api/export/activities.csv">Export CSV</a>
+          <button class="btn ghost" id="logout">Sign out</button>
+        </div>
+      </header>
+
+      <section class="page">
+        <div class="head">
+          <div>
+            <p class="kicker">Students</p>
+            <h1>Brainwave progress</h1>
+            <p class="muted">Each card compares a student's first activities with their latest. Click a card for the full history.</p>
+          </div>
+          <div class="filters">
+            <label class="field">Class <select id="class-filter"></select></label>
+            <label class="field">Sort <select id="sort">
+              <option value="name">Name</option>
+              <option value="improved">Most improved</option>
+              <option value="needs">Needs support</option>
+              <option value="recent">Last active</option>
+            </select></label>
+            <label class="field">Search <input id="search" placeholder="Name or student ID" /></label>
+          </div>
+        </div>
+
+        <div class="tiles" id="tiles"></div>
+
+        <div class="legend-bar">
+          <span><i class="sw light"></i>First 3 activities</span>
+          <span><i class="sw solid"></i>Latest 3 activities</span>
+          <span class="muted">Bands are % of total brain activity. Lower theta/beta usually goes with steadier attention.</span>
+        </div>
+
+        <div class="students" id="students"></div>
+
+        <details class="card tablets">
+          <summary><h2>Tablets</h2><span class="muted small" id="tablet-count"></span></summary>
+          <div class="table-wrap"><table id="devices"></table></div>
+        </details>
+      </section>
+
+      <aside class="drawer" id="drawer" hidden>
+        <div class="drawer-panel">
+          <button class="icon-btn" id="drawer-close" aria-label="Close">✕</button>
+          <div id="drawer-body"></div>
+        </div>
+      </aside>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

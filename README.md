@@ -9,7 +9,7 @@ An attention-training app for children, built with Expo / React Native for Andro
 | Part | Where |
 | :--- | :--- |
 | Tablet app (Expo SDK 58) | repository root |
-| School dashboard (Node.js, no npm packages) | `dashboard/` |
+| School dashboard (Node.js; on a school PC or online on Vercel) | `dashboard/` |
 | Screen-by-screen map | [docs/FLOWS.md](docs/FLOWS.md) |
 
 ---
@@ -18,6 +18,8 @@ An attention-training app for children, built with Expo / React Native for Andro
 
 - [Set up the school dashboard](#set-up-the-school-dashboard)
 - [Add a tablet](#add-a-tablet)
+- [Dashboard online (Vercel)](#dashboard-online-vercel)
+- [Sync over the internet (Tailscale)](#sync-over-the-internet-tailscale)
 - [The dashboard](#the-dashboard)
 - [Games](#games)
 - [Profile](#profile)
@@ -58,11 +60,11 @@ The school starts with 4 tablets for 20 children. Each new tablet takes about 10
 1. **Install the app.** Open the latest Android build from the project's EAS Builds page on the tablet and tap **Install** (allow "Install unknown apps" for the browser when asked). From a PC with USB debugging on, `adb install -r excellent-mind.apk` also works.
 2. **Pair the headset.** Switch on the BrainLink-Lite, open Android **Settings → Bluetooth** and pair **BrainLink_Lite**. Each tablet needs its own headset. Close any other headset app, because the headset talks to one app at a time.
 3. **Connect to the dashboard.** In the app open **Settings → School dashboard** and enter:
-   - the server address the dashboard console shows for "Tablets & other PCs", for example `http://192.168.1.20:4000`
+   - the server address the dashboard console shows: **Tablets via Tailscale** (for example `http://100.101.5.9:4000`) if the school uses [Tailscale](#sync-over-the-internet-tailscale), otherwise **Tablets on the same Wi-Fi** (for example `http://192.168.1.82:4000`)
    - the school key
    - a tablet name that is unique and written on the tablet, for example `Lab tablet 5`
 
-   Tap **Save & connect**. The tablet must be on the same Wi-Fi as the PC.
+   Tap **Save & connect**.
 4. **Add the children.** Create a profile for each child who uses this tablet. On **Profile → Edit details** give each child their **Student ID** and **Class**.
 5. **Check it.** Play one short activity. The child appears on the dashboard and the tablet shows under **Tablets**.
 
@@ -70,7 +72,61 @@ Tips for a growing lab:
 
 - Give each child a home tablet, about 5 children per tablet. With 4 tablets that covers the current 20 children; add a tablet for every 5 new children.
 - Always use the school's real Student ID. If a child has to use another tablet, create them there with the **same Student ID** and the dashboard merges both into one student.
-- Results wait on the tablet when the Wi-Fi is down and sync on their own later.
+- Results wait on the tablet when it is offline and sync on their own later.
+
+## Dashboard online (Vercel)
+
+The dashboard can also run online on [Vercel](https://vercel.com), with the results in a Postgres database (Neon). Tablets then sync over any internet connection, management opens it from anywhere, and no school PC has to stay on. It is the same dashboard: the school-PC version (SQLite) and the online version (Postgres) share the code in `dashboard/lib/`.
+
+**Set up once**
+
+1. In Vercel, import this GitHub repository and set **Root Directory** to `dashboard`. Every push to `main` then redeploys it.
+2. In the project's **Storage** tab, create a **Neon** Postgres database and connect it to the project. This adds `DATABASE_URL`.
+3. In **Settings → Environment Variables**, add:
+
+   | Name | Value |
+   | :--- | :--- |
+   | `SCHOOL_NAME` | the school's name |
+   | `SCHOOL_KEY` | a long random key the tablets use |
+   | `ADMIN_PASSWORD` | a long password for the web dashboard |
+
+4. Redeploy. The tables are created on the first request.
+
+**On each tablet:** in **Settings → School dashboard**, set the server address to the project's address, for example `https://excellent-mind.vercel.app`, and enter the school key.
+
+Because the online dashboard is on the public internet, keep the school key and admin password long and private.
+
+Because tablets only send results they have not sent before, copy the school PC's existing results across once when you switch. On the school PC:
+
+```powershell
+cd dashboard
+node scripts/copy-to-online.mjs https://excellent-mind.vercel.app <school key>
+```
+
+Then change the address on each tablet. Running the copy again is safe: results already online are skipped.
+
+## Sync over the internet (Tailscale)
+
+With [Tailscale](https://tailscale.com) the tablets reach the dashboard PC over any internet connection (school Wi-Fi, a SIM card or a phone hotspot), not only the school Wi-Fi. Each device gets a fixed private address, the traffic is encrypted, and the dashboard is still not on the public internet: only devices signed in to the school's Tailscale account can open it.
+
+**Once, on the dashboard PC**
+
+1. Create the school's Tailscale account at [tailscale.com](https://tailscale.com), signing in with a school Google or Microsoft account that the lab in-charge keeps. Use this one account on every device. Check Tailscale's pricing page for which plan fits school use.
+2. Install Tailscale for Windows from [tailscale.com/download](https://tailscale.com/download) and sign in with that account.
+3. Restart the dashboard (`npm start`). The console now shows a line like `Tablets via Tailscale: http://100.101.5.9:4000`. This is the address for every tablet, and it does not change.
+4. In the [Tailscale admin console](https://login.tailscale.com/admin/machines), open the PC's **…** menu and choose **Disable key expiry**. Otherwise the PC is signed out after 180 days and syncing stops.
+5. Set the PC to never sleep while plugged in (**Settings → System → Power**), so tablets can sync during the day.
+
+**On each tablet**
+
+1. Install **Tailscale** from the Play Store, sign in with the same school account and allow the VPN request.
+2. Open Android **Settings → Network & internet → VPN** (the path differs a little by brand), tap the gear next to Tailscale and turn on **Always-on VPN**, so it reconnects after a restart. Leave "Block connections without VPN" off.
+3. In Excellent Mind open **Settings → School dashboard**, set the server address to the Tailscale address from step 3 above and tap **Save & connect**.
+4. In the admin console, choose **Disable key expiry** for this tablet too.
+
+**Seeing the dashboard from home:** install Tailscale on a laptop or phone, sign in with the school account and open the same `http://100.x.x.x:4000` address.
+
+If a tablet is offline, its results wait on the tablet and upload when it is back online. If Tailscale on the PC is ever switched off, tablets on the school Wi-Fi can still use the **Tablets on the same Wi-Fi** address.
 
 ## The dashboard
 
@@ -140,7 +196,9 @@ npx expo start --dev-client
 | Accounts, settings, history, journey progress (stored on the tablet) | `src/store/AppStore.tsx` |
 | Brainwave metrics (first vs latest) | `src/store/metrics.ts` |
 | Sync to the school dashboard | `src/sync/SyncProvider.tsx` |
-| School dashboard server (Node, built-in SQLite) and web UI | `dashboard/server.mjs`, `dashboard/public/` |
+| Dashboard routes (shared), SQLite and Postgres storage | `dashboard/lib/` |
+| Dashboard on a school PC / on Vercel | `dashboard/server.mjs`, `dashboard/api/index.js` |
+| Dashboard web UI | `dashboard/public/` |
 | English / Tamil / Hindi strings | `src/i18n/strings.ts` |
 | Theme and brand name | `src/constants/theme.ts`, `src/constants/brand.ts` |
 | Sounds and icons are generated, not downloaded | `scripts/gen-audio.js`, `scripts/gen-icons.js` |

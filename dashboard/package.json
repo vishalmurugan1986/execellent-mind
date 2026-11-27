@@ -9,5 +9,8 @@
   },
   "scripts": {
     "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.1"
   }
 }

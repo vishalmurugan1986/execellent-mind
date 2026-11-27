@@ -119,7 +119,10 @@ export function createHandler({ config, store, serveStatic }) {
     const [exp, mac] = (cookieOf(req, 'em_session') ?? '').split('.');
     return Boolean(exp && mac && Number(exp) > Date.now() && same(mac, sign(exp)));
   };
-  const hasKey = (req) => same(req.headers['x-school-key'] ?? '', config.schoolKey);
+  // Keys are typed on tablet keyboards, which like to lowercase letters or add spaces: compare
+  // without case and whitespace.
+  const keyForm = (k) => String(k ?? '').replace(/\s+/g, '').toUpperCase();
+  const hasKey = (req) => same(keyForm(req.headers['x-school-key']), keyForm(config.schoolKey));
   const secure = (req) => (req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '');
 
   async function exportActivities() {

@@ -91,6 +91,7 @@ The dashboard can also run online on [Vercel](https://vercel.com), with the resu
    | `ADMIN_PASSWORD` | a long password for the web dashboard |
 
 4. Redeploy. The tables are created on the first request.
+5. In **Firewall**, add a rule named `Tablet sync bypass`: if **Request Path** is any of `/api/ping`, `/api/sync` **and** header `x-school-key` exists, then **Bypass**. Publish it. Without it, Vercel's bot check can briefly block tablets after a burst of requests, because the app cannot answer a browser challenge. The dashboard still checks the school key on every request.
 
 **On each tablet:** in **Settings → School dashboard**, set the server address to the project's address, for example `https://excellent-mind-achariya1.vercel.app`, and enter the school key.
 

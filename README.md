@@ -92,7 +92,7 @@ The dashboard can also run online on [Vercel](https://vercel.com), with the resu
 
 4. Redeploy. The tables are created on the first request.
 
-**On each tablet:** in **Settings → School dashboard**, set the server address to the project's address, for example `https://excellent-mind.vercel.app`, and enter the school key.
+**On each tablet:** in **Settings → School dashboard**, set the server address to the project's address, for example `https://excellent-mind-achariya1.vercel.app`, and enter the school key.
 
 Because the online dashboard is on the public internet, keep the school key and admin password long and private.
 
@@ -100,7 +100,7 @@ Because tablets only send results they have not sent before, copy the school PC'
 
 ```powershell
 cd dashboard
-node scripts/copy-to-online.mjs https://excellent-mind.vercel.app <school key>
+node scripts/copy-to-online.mjs https://excellent-mind-achariya1.vercel.app <school key>
 ```
 
 Then change the address on each tablet. Running the copy again is safe: results already online are skipped.
@@ -136,7 +136,7 @@ Open the dashboard address in a browser and sign in with the admin password. It 
 - **One card per student:** current attention and its change, a brainwave bar chart (delta, theta, alpha, beta and gamma, first 3 activities against latest 3), the theta/beta ratio, and an attention trend line.
 - **Filters:** class, search by name or Student ID, sort by name, most improved, needs support or last active.
 - **Student detail** (click a card): band bars first vs latest, every band per activity, attention per activity, and the full activity history.
-- **Tablets:** each tablet that syncs and when it last did.
+- **Tablets:** each tablet that syncs and when it last did. A tablet with no students (for example a retired one) can be removed.
 - **Export CSV** of every activity for the school management system.
 
 Lower theta/beta usually goes with steadier attention, so a falling theta/beta and a rising attention line are good signs.

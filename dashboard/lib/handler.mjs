@@ -102,7 +102,8 @@ export function cleanSync(body) {
 
 /**
  * @param {{ config: { schoolName: string, schoolKey: string, adminPassword: string, sessionSecret?: string },
- *           store: { sync(rows): Promise<number>, allData(): Promise<object>, deleteChild(id: string): Promise<void> },
+ *           store: { sync(rows): Promise<number>, allData(): Promise<object>, deleteChild(id: string): Promise<void>,
+ *                    deleteDevice(id: string): Promise<boolean> },
  *           serveStatic?: (req, res) => void }} opts
  */
 export function createHandler({ config, store, serveStatic }) {
@@ -163,6 +164,11 @@ export function createHandler({ config, store, serveStatic }) {
         if (del && req.method === 'DELETE') {
           await store.deleteChild(decodeURIComponent(del[1]));
           return send(res, 200, { ok: true });
+        }
+        const dev = pathname.match(/^\/api\/devices\/([^/]+)$/);
+        if (dev && req.method === 'DELETE') {
+          const removed = await store.deleteDevice(decodeURIComponent(dev[1]));
+          return removed ? send(res, 200, { ok: true }) : send(res, 409, { error: 'Remove this tablet\'s students first' });
         }
         if (pathname === '/api/export/activities.csv')
           return send(res, 200, await exportActivities(), { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': 'attachment; filename="excellent-mind-activities.csv"' });

@@ -85,5 +85,15 @@ export function postgresStore(url) {
         sql.query('DELETE FROM children WHERE id = $1', [id]),
       ]);
     },
+
+    /** Removes a tablet from the list, only when no student belongs to it. */
+    async deleteDevice(id) {
+      await init();
+      const rows = await sql.query(
+        'DELETE FROM devices WHERE id = $1 AND NOT EXISTS (SELECT 1 FROM children WHERE device_id = $1) RETURNING id',
+        [id],
+      );
+      return rows.length > 0;
+    },
   };
 }

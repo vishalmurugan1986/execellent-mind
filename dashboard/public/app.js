@@ -291,11 +291,24 @@ function renderDevices() {
   const kids = (id) => d.children.filter((c) => c.deviceId === id).length;
   $('tablet-count').textContent = `${d.devices.length} tablet${d.devices.length === 1 ? '' : 's'} syncing`;
   $('devices').innerHTML = d.devices.length
-    ? `<thead><tr><th>Tablet</th><th>Students</th><th>Last sync</th><th>First seen</th></tr></thead><tbody>${d.devices
-        .map((x) => `<tr><td><b>${esc(x.name)}</b></td><td>${kids(x.id)}</td><td>${esc(ago(x.lastSync))}</td><td>${x.firstSeen ? esc(dateStr(x.firstSeen)) : '–'}</td></tr>`)
+    ? `<thead><tr><th>Tablet</th><th>Students</th><th>Last sync</th><th>First seen</th><th></th></tr></thead><tbody>${d.devices
+        .map(
+          (x) =>
+            `<tr><td><b>${esc(x.name)}</b></td><td>${kids(x.id)}</td><td>${esc(ago(x.lastSync))}</td><td>${x.firstSeen ? esc(dateStr(x.firstSeen)) : '–'}</td>` +
+            `<td>${kids(x.id) ? '' : `<button class="btn danger small" data-remove-device="${esc(x.id)}" data-name="${esc(x.name)}">Remove</button>`}</td></tr>`,
+        )
         .join('')}</tbody>`
     : '<tbody><tr><td class="empty">No tablet has synced yet. See "Add a tablet" in the README.</td></tr></tbody>';
 }
+
+// Only tablets with no students can be removed (for example a retired tablet whose students moved).
+$('devices').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-remove-device]');
+  if (!btn) return;
+  if (!confirm(`Remove ${btn.dataset.name} from the list? It comes back if it syncs again.`)) return;
+  await api(`/api/devices/${encodeURIComponent(btn.dataset.removeDevice)}`, { method: 'DELETE' });
+  load();
+});
 
 function openStudent(key) {
   const r = state.students.find((x) => x.key === key);

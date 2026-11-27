@@ -77,5 +77,11 @@ export function sqliteStore(dataDir) {
       db.prepare('DELETE FROM activities WHERE child_id = ?').run(id);
       db.prepare('DELETE FROM children WHERE id = ?').run(id);
     },
+
+    /** Removes a tablet from the list, only when no student belongs to it. */
+    async deleteDevice(id) {
+      const r = db.prepare('DELETE FROM devices WHERE id = ? AND NOT EXISTS (SELECT 1 FROM children WHERE device_id = ?)').run(id, id);
+      return Number(r.changes) > 0;
+    },
   };
 }
